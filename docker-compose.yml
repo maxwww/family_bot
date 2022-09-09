@@ -1,0 +1,39 @@
+version: '3.5'
+
+services:
+  bot:
+    build: .
+    container_name: family_bot
+    restart: always
+    volumes:
+      - .env:/root/.env
+    depends_on:
+      - db
+    links:
+      - db
+
+  db:
+    image: postgres
+    container_name: family_bot_db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_USER: ${PG_USER}
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: family_bot_adminer
+    restart: always
+    depends_on:
+      - db
+    links:
+      - db
+    ports:
+      - ${ADMINER_PORT}:8080
+
+
+volumes:
+  db:
+    driver: local
