@@ -11,8 +11,7 @@ import (
 func (bot *Bot) RegisterCrons() error {
 	c := cron.New(cron.WithLocation(bot.loc))
 
-	_, err := c.AddFunc("50 14 * * *", func() {
-		//_, err := c.AddFunc("30 8 * * *", func() {
+	_, err := c.AddFunc("30 8 * * *", func() {
 		for _, userId := range bot.subscribers {
 			message, keyboard := bot.getTasksListWithHeader()
 			bot.sendMessage(userId, message, keyboard)
@@ -28,7 +27,8 @@ func (bot *Bot) RegisterCrons() error {
 		now := time.Now().In(bot.loc)
 		now = now.Add(1 * time.Hour)
 		for _, v := range tasks {
-			if v.Date.Valid && v.Date.String[:10]+" "+v.Date.String[11:16] == now.Format(DateWithTimeFormat) {
+			if v.Date.Valid && v.Date.String[:10]+" "+v.Date.String[11:16] == now.Format(DateWithTimeFormat) &&
+				(now.Hour() != 0 || now.Minute() != 0) {
 				taskForNotifications = append(taskForNotifications, v)
 			}
 		}
