@@ -370,6 +370,8 @@ func (bot *Bot) findDate(input string) (*time.Time, string, bool, error) {
 		if date.Before(now) {
 			*date = date.AddDate(0, 0, 1)
 		}
+	} else if !isDateFound {
+		date = nil
 	}
 
 	return date, input, isDateFound, nil

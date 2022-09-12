@@ -62,15 +62,11 @@ func (bot *Bot) handleUnknownCommand(chatId int64) {
 
 // message handlers
 func (bot *Bot) handleIdleMessage(chatId int64, user *units.User, message string) {
-	date, title, isDateFound, err := bot.findDate(message)
+	date, title, _, err := bot.findDate(message)
 	if err != nil {
 		log.Println(err)
 		bot.sendParseError(chatId)
 		return
-	}
-
-	if !isDateFound {
-		date = nil
 	}
 
 	title = trim(title)
