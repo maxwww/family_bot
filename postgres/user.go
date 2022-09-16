@@ -34,26 +34,6 @@ func (us *UserService) CreateUser(ctx context.Context, user *units.User) error {
 	return tx.Commit()
 }
 
-func createUser(ctx context.Context, tx *sqlx.Tx, user *units.User) error {
-	query := `
-	INSERT INTO users (telegram_id, first_name, last_name, user_name)
-	VALUES ($1, $2, $3, $4) RETURNING id;
-	`
-	args := []interface{}{user.TelegramID, user.FirstName, user.LastName, user.UserName}
-	err := tx.QueryRowxContext(ctx, query, args...).Scan(&user.ID)
-
-	if err != nil {
-		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "users_telegram_id_key"`:
-			return units.ErrDuplicateID
-		default:
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (us *UserService) UserByTelegramID(ctx context.Context, telegramId uint) (*units.User, error) {
 	tx, err := us.db.BeginTxx(ctx, nil)
 
@@ -119,6 +99,26 @@ func (us *UserService) UpdateUser(ctx context.Context, user *units.User, patch u
 	return nil
 }
 
+func createUser(ctx context.Context, tx *sqlx.Tx, user *units.User) error {
+	query := `
+	INSERT INTO users (telegram_id, first_name, last_name, user_name)
+	VALUES ($1, $2, $3, $4) RETURNING id;
+	`
+	args := []interface{}{user.TelegramID, user.FirstName, user.LastName, user.UserName}
+	err := tx.QueryRowxContext(ctx, query, args...).Scan(&user.ID)
+
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_telegram_id_key"`:
+			return units.ErrDuplicateID
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 func findOneUser(ctx context.Context, tx *sqlx.Tx, filter units.UserFilter) (*units.User, error) {
 	us, err := findUsers(ctx, tx, filter)
 
@@ -175,17 +175,22 @@ func updateUser(ctx context.Context, tx *sqlx.Tx, user *units.User, patch units.
 		user.UserName = *v
 	}
 
+	if v := patch.Notifications; v != nil {
+		user.Notifications = *v
+	}
+
 	args := []interface{}{
 		user.FirstName,
 		user.LastName,
 		user.UserName,
+		user.Notifications,
 		user.ID,
 	}
 
 	query := `
 	UPDATE users 
-	SET first_name = $1, last_name = $2, user_name = $3
-	WHERE id = $4`
+	SET first_name = $1, last_name = $2, user_name = $3, notifications = $4
+	WHERE id = $5`
 
 	tx.QueryRowxContext(ctx, query, args...)
 

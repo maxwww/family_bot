@@ -13,8 +13,11 @@ func (bot *Bot) RegisterCrons() error {
 
 	_, err := c.AddFunc("30 8 * * *", func() {
 		for _, userId := range bot.subscribers {
-			message, keyboard := bot.getTasksListWithHeader()
-			bot.sendMessage(userId, message, keyboard)
+			user, err := bot.userService.UserByTelegramID(context.Background(), uint(userId))
+			if err == nil && user.Notifications {
+				message, keyboard := bot.getTasksListWithHeader()
+				bot.sendMessage(userId, message, keyboard)
+			}
 		}
 	})
 	if err != nil {
@@ -35,7 +38,10 @@ func (bot *Bot) RegisterCrons() error {
 		for _, task := range taskForNotifications {
 			message := fmt.Sprintf(TextInOneHour, task.Title)
 			for _, userId := range bot.subscribers {
-				bot.sendMessage(userId, message, nil)
+				user, err := bot.userService.UserByTelegramID(context.Background(), uint(userId))
+				if err == nil && user.Notifications {
+					bot.sendMessage(userId, message, nil)
+				}
 			}
 		}
 	})

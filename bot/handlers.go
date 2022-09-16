@@ -11,10 +11,12 @@ import (
 )
 
 const (
-	commandStart  = "start"
-	commandHelp   = "help"
-	commandList   = "list"
-	commandCancel = "cancel"
+	commandStart       = "start"
+	commandHelp        = "help"
+	commandList        = "list"
+	commandCancel      = "cancel"
+	commandSubscribe   = "subscribe"
+	commandUnsubscribe = "unsubscribe"
 
 	CQNewTaskSave          = "new_task_save"
 	CQNewTaskEditTitle     = "new_task_edit_title"
@@ -37,6 +39,7 @@ const (
 	CQTaskEditDeleteTask   = "task_edit_delete_task"
 )
 
+// command handlers
 func (bot *Bot) handleStartCommand(chatId int64) {
 	bot.sendMessage(chatId, TextStartMessage, nil)
 }
@@ -47,13 +50,31 @@ func (bot *Bot) handleListCommand(chatId int64) {
 	bot.sendMessage(chatId, message, keyboard)
 }
 
-// command handlers
 func (bot *Bot) handleCancelCommand(chatId int64, userTelegramId int) {
 	bot.stateService.SetUserState(userTelegramId, st.State{
 		Status: st.STATUS_IDLE,
 	})
 
 	bot.sendMessage(chatId, TextCancel, nil)
+}
+
+func (bot *Bot) handleSubscribeCommand(chatId int64, notifications bool, user *units.User) {
+	err := bot.userService.UpdateUser(context.Background(), user, units.UserPatch{
+		Notifications: &notifications,
+	})
+
+	if err != nil {
+		bot.sendGeneralError(chatId)
+		return
+	}
+
+	message := TextSubscriptionsOn
+
+	if !user.Notifications {
+		message = TextSubscriptionsOff
+	}
+
+	bot.sendMessage(chatId, message, nil)
 }
 
 func (bot *Bot) handleUnknownCommand(chatId int64) {
@@ -302,7 +323,10 @@ func (bot *Bot) saveNewTask(state *st.State, chatId int64, messageId int, userTe
 		message := getSavedTaskInfo(state.Task.Title, state.Task.Date)
 
 		for _, id := range bot.subscribers {
-			bot.sendMessage(id, message, nil)
+			user, err := bot.userService.UserByTelegramID(context.Background(), uint(id))
+			if err == nil && user.Notifications {
+				bot.sendMessage(id, message, nil)
+			}
 		}
 	} else {
 		bot.sendGeneralError(chatId)

@@ -4,7 +4,8 @@ CREATE TABLE users
     telegram_id   integer      not null unique,
     first_name    varchar(255) not null,
     last_name     varchar(255),
-    user_name     varchar(255)
+    user_name     varchar(255),
+    notifications boolean default false not null
 );
 
 CREATE TABLE tasks

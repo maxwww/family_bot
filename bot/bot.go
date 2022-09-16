@@ -172,6 +172,10 @@ func (bot *Bot) handleUpdate(update tgbotapi.Update) {
 			bot.handleListCommand(chatId)
 		case commandCancel:
 			bot.handleCancelCommand(chatId, int(user.TelegramID))
+		case commandSubscribe:
+			bot.handleSubscribeCommand(chatId, true, user)
+		case commandUnsubscribe:
+			bot.handleSubscribeCommand(chatId, false, user)
 		default:
 			bot.handleUnknownCommand(chatId)
 		}
