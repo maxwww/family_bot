@@ -22,9 +22,10 @@ type StateService struct {
 type Status string
 
 type Task struct {
-	ID    int
-	Title string
-	Date  *time.Time
+	ID            int
+	Title         string
+	Notifications int
+	Date          *time.Time
 }
 
 var _ StateServiceI = (*StateService)(nil)

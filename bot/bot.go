@@ -117,9 +117,13 @@ func (bot *Bot) handleUpdate(update tgbotapi.Update) {
 		command := update.CallbackQuery.Data
 		id := 0
 		commandWithParam := strings.Split(update.CallbackQuery.Data, ":")
+		param := 0
 		if len(commandWithParam) > 1 {
 			command = commandWithParam[0]
 			id, _ = strconv.Atoi(commandWithParam[1])
+			if len(commandWithParam) > 2 {
+				param, _ = strconv.Atoi(commandWithParam[2])
+			}
 		}
 
 		switch command {
@@ -137,6 +141,8 @@ func (bot *Bot) handleUpdate(update tgbotapi.Update) {
 			bot.removeTimeNewTask(state, chatId, update.CallbackQuery.Message.MessageID, int(user.TelegramID))
 		case CQNewTaskCancel:
 			bot.cancelNewTask(chatId, update.CallbackQuery.Message.MessageID, int(user.TelegramID))
+		case CQNewTaskSetNotifications:
+			bot.setNotificationsNewTask(state, chatId, update.CallbackQuery.Message.MessageID, param, int(user.TelegramID))
 		case CQTaskComplete:
 			bot.completeTask(chatId, update.CallbackQuery.Message.MessageID, id)
 		case CQTaskRemoveAllDone:
@@ -161,6 +167,8 @@ func (bot *Bot) handleUpdate(update tgbotapi.Update) {
 			bot.removeTaskTime(chatId, update.CallbackQuery.Message.MessageID, int(user.TelegramID), id)
 		case CQTaskEditDeleteTask:
 			bot.deleteTask(chatId, update.CallbackQuery.Message.MessageID, id)
+		case CQTaskEditSetNotifications:
+			bot.setNotifications(chatId, update.CallbackQuery.Message.MessageID, int(user.TelegramID), id, param)
 		default:
 			bot.sendGeneralError(chatId)
 		}

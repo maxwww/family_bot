@@ -36,14 +36,14 @@ func (us *TaskService) CreateTask(ctx context.Context, task *units.Task) error {
 
 func createTask(ctx context.Context, tx *sqlx.Tx, task *units.Task) error {
 	query := `
-	INSERT INTO tasks (title, date, done)
-	VALUES ($1, $2, $3) RETURNING id;
+	INSERT INTO tasks (title, date, done, notifications)
+	VALUES ($1, $2, $3, $4) RETURNING id;
 	`
 	var date interface{} = nil
 	if task.Date.Valid && task.Date.String != "" {
 		date = task.Date.String
 	}
-	args := []interface{}{task.Title, date, false}
+	args := []interface{}{task.Title, date, false, task.Notifications}
 	err := tx.QueryRowxContext(ctx, query, args...).Scan(&task.ID)
 
 	if err != nil {
@@ -255,18 +255,22 @@ func updateTask(ctx context.Context, tx *sqlx.Tx, task *units.Task, patch units.
 			dateValue = nil
 		}
 	}
+	if v := patch.Notifications; v != nil {
+		task.Notifications = *v
+	}
 
 	args := []interface{}{
 		task.Done,
 		task.Title,
 		dateValue,
+		task.Notifications,
 		task.ID,
 	}
 
 	query := `
 	UPDATE tasks 
-	SET done = $1, title = $2, date = $3
-	WHERE id = $4`
+	SET done = $1, title = $2, date = $3, notifications = $4
+	WHERE id = $5`
 
 	tx.QueryRowxContext(ctx, query, args...)
 

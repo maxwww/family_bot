@@ -6,16 +6,18 @@ import (
 )
 
 type Task struct {
-	ID    uint
-	Title string         `db:"title"`
-	Date  sql.NullString `db:"date"`
-	Done  bool           `db:"done"`
+	ID            uint
+	Title         string         `db:"title"`
+	Date          sql.NullString `db:"date"`
+	Done          bool           `db:"done"`
+	Notifications int            `db:"notifications"`
 }
 
 type TaskPatch struct {
-	Title *string
-	Done  *bool
-	Date  *sql.NullString
+	Title         *string
+	Done          *bool
+	Date          *sql.NullString
+	Notifications *int
 }
 
 type TaskFilter struct {

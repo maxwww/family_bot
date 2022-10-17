@@ -19,6 +19,8 @@ const (
 	TimeFormat           = "15:04"
 	DateWithTimeFormatUA = "02.01.2006 15:04"
 	DateFormatUA         = "02.01.2006"
+
+	DeFaultNotification = OneHourNotification
 )
 
 var DayNames = map[time.Weekday]string{
@@ -75,9 +77,12 @@ func (bot *Bot) deleteMessage(chatId int64, messageId int) {
 	}
 }
 
-func (bot *Bot) sendMessage(chatId int64, message string, keyboard *tgbotapi.InlineKeyboardMarkup) {
+func (bot *Bot) sendMessage(chatId int64, message string, keyboard *tgbotapi.InlineKeyboardMarkup, parseMode string) {
 	msg := tgbotapi.NewMessage(chatId, message)
-	msg.ParseMode = "html"
+	if parseMode == "" {
+		parseMode = "html"
+	}
+	msg.ParseMode = parseMode
 	if keyboard != nil && len((*keyboard).InlineKeyboard) > 0 {
 		msg.ReplyMarkup = keyboard
 	}
@@ -87,9 +92,12 @@ func (bot *Bot) sendMessage(chatId int64, message string, keyboard *tgbotapi.Inl
 	}
 }
 
-func (bot *Bot) editMessage(chatId int64, messageId int, message string, keyboard *tgbotapi.InlineKeyboardMarkup) {
+func (bot *Bot) editMessage(chatId int64, messageId int, message string, keyboard *tgbotapi.InlineKeyboardMarkup, parseMode string) {
 	msg := tgbotapi.NewEditMessageText(chatId, messageId, message)
-	msg.ParseMode = "html"
+	if parseMode == "" {
+		parseMode = "html"
+	}
+	msg.ParseMode = parseMode
 	if keyboard != nil && len((*keyboard).InlineKeyboard) > 0 {
 		msg.ReplyMarkup = keyboard
 	}
@@ -332,14 +340,14 @@ func (bot *Bot) findDate(input string) (*time.Time, string, bool, error) {
 						return nil, "", isDateFound, units.DataParsingError
 					}
 
-					parsedDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, bot.loc)
-					if parsedDate.Before(*today) {
+					tmpParsedDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, bot.loc)
+					if tmpParsedDate.Before(*today) {
 						if match[6] != "" {
 							return nil, "", isDateFound, units.DataParsingError
 						}
-						parsedDate = parsedDate.AddDate(1, 0, 0)
+						tmpParsedDate = tmpParsedDate.AddDate(1, 0, 0)
 					}
-					date = &parsedDate
+					date = &tmpParsedDate
 				}
 			}
 		}
